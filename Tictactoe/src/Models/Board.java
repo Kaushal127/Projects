@@ -6,7 +6,6 @@ import java.util.List;
 public class Board {
     private int dimensions ;
     private List<List<Cell>> board ;
-
     public Board(int dimensions) {
         this.dimensions = dimensions;
         board = new ArrayList<>() ;
@@ -17,7 +16,6 @@ public class Board {
                 }
           }
     }
-
     public int getDimensions() {
         return dimensions;
     }
@@ -32,5 +30,14 @@ public class Board {
 
     public void setBoard(List<List<Cell>> board) {
         this.board = board;
+    }
+
+    public void printBoard() {
+        for (List<Cell> row : board){
+            for (Cell cell : row){
+                cell.display() ;
+            }
+            System.out.println();
+        }
     }
 }

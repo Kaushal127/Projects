@@ -23,10 +23,81 @@ public class Game {
         this.board = new Board(dimension) ;
         this.players = players;
         this.winningStartegy = winningStartegy;
-
+        this.gameState = GameState.IN_PROG ;
+        this.nextPlayerIndex = 0 ;
+        this.moves = new ArrayList<>() ;
     }
     public static Builder getBuilder(){
         return new Builder() ;
+    }
+
+    public void printBoard() {
+        board.printBoard() ;
+    }
+
+    public void makeMove() {
+        Player player = players.get(nextPlayerIndex) ;
+        Cell cell = player.makeMove(board) ;
+
+        Move move = new Move(cell , player) ;
+        moves.add(move) ;
+
+        if (checkWinner(move , board)){
+            gameState = GameState.SUCCESS ;
+            winner = player ;
+            return;
+        }
+        if (moves.size()==board.getDimensions()*board.getDimensions()){
+            gameState = GameState.DRAW ;
+            return ;
+        }
+        nextPlayerIndex++ ;
+        nextPlayerIndex = nextPlayerIndex % players.size() ;
+    }
+
+    private boolean checkWinner(Move move, Board board) {
+            for (WinningStartegy winningStartegy1 : winningStartegy){
+                if (winningStartegy1.checkWinner(board , move) ){
+                    return true ;
+                }
+            }
+            return false ;
+    }
+
+    public void undo() {
+        Move lastMove = removeLastMove() ;
+        if (lastMove==null){
+            return ;
+        }
+        updateTheCellAndUndoStrategies(lastMove) ;
+        updateNextPlayer() ;
+    }
+
+    private void updateNextPlayer() {
+        if (nextPlayerIndex!=0){
+            nextPlayerIndex-- ;
+        } else {
+            nextPlayerIndex = players.size() - 1 ;
+        }
+    }
+
+    private void updateTheCellAndUndoStrategies(Move lastMove) {
+        Cell cell = lastMove.getCell() ;
+        cell.setCellState(CellState.EMPTY);
+        cell.setPlayer(null);
+          for(WinningStartegy winningStartegy1 : winningStartegy){
+              winningStartegy1.undo(board , lastMove) ;
+          }
+     }
+
+    private Move removeLastMove() {
+        if (moves.isEmpty()){
+            System.out.println("No Moves to undo");
+            return null ;
+        }
+        Move lastMove = moves.get(moves.size()-1) ;
+        moves.remove(lastMove) ;
+        return lastMove ;
     }
 
     public static class Builder {
@@ -60,6 +131,8 @@ public class Game {
               for (Player player : players){
                   if (symbols.contains(player.getSymbol())){
                       throw new DuplicateSymbolException();
+                  } else {
+                      symbols.add(player.getSymbol()) ;
                   }
               }
 
